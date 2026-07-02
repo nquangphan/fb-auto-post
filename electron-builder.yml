@@ -1,0 +1,43 @@
+appId: com.fbautopost.app
+productName: FB Auto-Post
+copyright: © 2026
+
+directories:
+  output: dist
+  buildResources: build
+
+# Bundle the compiled app + production node_modules. electron-builder packs the
+# rest; we only list what to include from the build output.
+files:
+  - out/**/*
+  - package.json
+
+# Native addon + Playwright must be UNPACKED from the asar archive so they load at
+# runtime (a native .node can't be required from inside asar; Playwright spawns a
+# real browser binary). Without this the packaged app fails on launch.
+asarUnpack:
+  - "**/node_modules/better-sqlite3/**"
+  - "**/node_modules/playwright/**"
+  - "**/node_modules/playwright-core/**"
+
+# Chromium is bundled so the installer is self-contained (no separate
+# `playwright install` on the client machine). The build installs the browser
+# with PLAYWRIGHT_BROWSERS_PATH=0 so it lands under node_modules/playwright-core/
+# .local-browsers, which the asarUnpack glob above then ships. See docs/packaging.md.
+
+win:
+  target:
+    - nsis
+  artifactName: ${productName}-Setup-${version}.${ext}
+  # Code-signing is intentionally OFF for v1 (single-client install). Unsigned →
+  # Windows SmartScreen shows a one-time "Unknown publisher / Run anyway" prompt.
+  # To sign later, add `certificateFile` + `certificatePassword` here.
+
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+  deleteAppDataOnUninstall: false # keep the user's DB/profiles/content on uninstall
+
+# NOTE: electron-updater is deliberately NOT configured (Red Team C1). Updates are
+# delivered by running a newer installer; no auto-update / publish block exists.

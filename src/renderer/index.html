@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Production CSP is injected at build time (see electron.vite.config.ts).
+         Dev intentionally has no CSP so Vite HMR (ws + inline refresh preamble) works;
+         the dev renderer only ever loads the local Vite server. -->
+    <title>FB Auto-Post</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>
