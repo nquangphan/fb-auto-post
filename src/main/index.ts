@@ -1,3 +1,4 @@
+import './playwright-env' // MUST be first: sets PLAYWRIGHT_BROWSERS_PATH before any playwright import
 import { join } from 'node:path'
 import { mkdirSync, rmSync } from 'node:fs'
 import { app, BrowserWindow, dialog, shell } from 'electron'
@@ -24,15 +25,6 @@ import { enrichAttempt } from './ipc/handlers'
 import { initLogger, log } from './logger'
 import { IPC } from '@shared/ipc'
 import type { Db } from './db'
-
-// In a packaged build Chromium is bundled under playwright-core/.local-browsers
-// via PLAYWRIGHT_BROWSERS_PATH=0 at build time. Playwright reads this env at
-// LAUNCH time, so it must also be set at runtime or it falls back to the empty
-// system cache and every launch fails (Red Team review H1). Dev keeps the normal
-// cache. Set before any launchProfile call.
-if (app.isPackaged && !process.env['PLAYWRIGHT_BROWSERS_PATH']) {
-  process.env['PLAYWRIGHT_BROWSERS_PATH'] = '0'
-}
 
 let mainWindow: BrowserWindow | null = null
 // Hoisted so it can be closed on the error/quit path even if a later bootstrap

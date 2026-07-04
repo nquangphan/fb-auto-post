@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { mkdirSync } from 'node:fs'
-import { chromium, type BrowserContext } from 'playwright'
+import type { BrowserContext } from 'playwright'
 import { assertInsideRoot } from '../util/path-safety'
 
 export interface LaunchOptions {
@@ -40,6 +40,12 @@ export async function launchProfile(
 ): Promise<BrowserContext> {
   const profileDir = resolveProfileDir(profilesRoot, accountId)
   const headful = opts.headful ?? true
+
+  // Lazy require (not a top-level import): playwright-core resolves its
+  // browsers-registry directory the moment it's required, so it must load AFTER
+  // PLAYWRIGHT_BROWSERS_PATH is set (see playwright-env.ts). A top-level import
+  // gets hoisted above that env by the bundler and locks in the wrong path.
+  const { chromium } = require('playwright') as typeof import('playwright')
 
   return chromium.launchPersistentContext(profileDir, {
     headless: !headful,
