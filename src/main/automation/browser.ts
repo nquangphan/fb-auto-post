@@ -1,4 +1,4 @@
-import { join } from 'node:path'
+import { join, sep } from 'node:path'
 import { mkdirSync } from 'node:fs'
 import type { BrowserContext } from 'playwright'
 import { assertInsideRoot } from '../util/path-safety'
@@ -47,8 +47,18 @@ export async function launchProfile(
   // gets hoisted above that env by the bundler and locks in the wrong path.
   const { chromium } = require('playwright') as typeof import('playwright')
 
+  // Playwright computes the Chromium path inside app.asar, but the binary is
+  // asarUnpacked — a real .exe can't live inside the asar archive. child_process
+  // .spawn does NOT honor Electron's asar→unpacked fs redirect, so Playwright
+  // would spawn the in-asar path and fail with ENOENT. Point executablePath at
+  // the unpacked copy explicitly. No-op in dev (path has no `app.asar`).
+  const executablePath = chromium
+    .executablePath()
+    .replace(`app.asar${sep}`, `app.asar.unpacked${sep}`)
+
   return chromium.launchPersistentContext(profileDir, {
     headless: !headful,
+    executablePath,
     args: ['--disable-blink-features=AutomationControlled'],
     proxy: opts.proxy ? { server: opts.proxy } : undefined,
     viewport: null,
