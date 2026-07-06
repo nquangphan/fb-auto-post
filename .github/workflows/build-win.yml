@@ -26,6 +26,22 @@ jobs:
       - name: Build Windows installer
         run: npm run dist:win
 
+      # Guard: the app spawns bundled Chromium from app.asar.unpacked at runtime.
+      # If chrome.exe is missing there (browser not bundled / not unpacked), every
+      # launch fails with ENOENT on the client. Fail the build here instead of
+      # shipping a broken installer.
+      - name: Verify bundled Chromium is unpacked
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse -Path dist/win-unpacked/resources/app.asar.unpacked -Filter chrome.exe -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match 'chromium-\d+\\chrome-win64\\chrome.exe' } |
+            Select-Object -First 1
+          if (-not $exe) {
+            Write-Error "Bundled Chromium chrome.exe NOT found under app.asar.unpacked — installer would fail with spawn ENOENT on the client."
+            exit 1
+          }
+          Write-Host "OK: bundled Chromium found at $($exe.FullName)"
+
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
