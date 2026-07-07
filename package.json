@@ -1,6 +1,6 @@
 {
   "name": "fb-auto-post",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Local desktop tool that auto-posts real-estate content to Facebook groups across multiple accounts without getting banned.",
   "main": "out/main/index.js",
   "author": "",

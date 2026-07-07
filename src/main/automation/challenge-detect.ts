@@ -70,7 +70,14 @@ export async function classify(probe: PageProbe): Promise<Classification> {
     return { kind: 'OTP', detail: url }
   }
   if (await probe.isVisible(FB_SELECTORS.captcha)) return { kind: 'CAPTCHA' }
-  if (await probe.isVisible(FB_SELECTORS.photoId)) return { kind: 'PHOTO_ID' }
+  // A bare image file-input is the feed/group COMPOSER's photo picker, not an
+  // ID-upload challenge — real photo-ID verification is only served under
+  // /checkpoint/. Gate on the checkpoint URL so a healthy group page (whose
+  // composer carries input[type=file][accept=image]) isn't misread as PHOTO_ID →
+  // CHECKPOINT, which blocked ALL posting. Mirrors the composerImageInput scoping fix.
+  if (FB_URL_PATTERNS.checkpoint.test(url) && (await probe.isVisible(FB_SELECTORS.photoId))) {
+    return { kind: 'PHOTO_ID' }
+  }
 
   // Bad credentials shows on the login form after a failed submit.
   if (matchesAny(text, FB_SELECTORS.badCredentialsText)) return { kind: 'BAD_CREDS' }

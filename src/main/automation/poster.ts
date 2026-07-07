@@ -189,6 +189,12 @@ export function createPoster(deps: PosterDeps) {
       const login = await classify(probe)
       const blocking = BLOCKING_LOGIN_STATES[login.kind]
       if (blocking) {
+        // Record the RAW kind + URL: 'CHECKPOINT' alone can't tell a real FB
+        // checkpoint from a misclassified group page — this is what to read first.
+        log.warn(
+          'post',
+          `cell acc=${cell.accountId} grp=${cell.groupId}: blocked before composer — ${login.kind} @ ${page.url()}${login.detail ? ` (${login.detail})` : ''}`
+        )
         deps.attempts.markResult(cell.id, { status: 'failed', failureReason: blocking })
         return
       }
